@@ -1,0 +1,193 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display+SC:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Raleway:ital,wght@0,100..900;1,100..900&family=Bodoni+Moda+SC:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display+SC:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap");
+@import "tailwindcss";
+
+
+.playfair-display-sc-regular {
+  font-family: "Playfair Display SC", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.playfair-display-sc-bold {
+  font-family: "Playfair Display SC", serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.playfair-display-sc-black {
+  font-family: "Playfair Display SC", serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.playfair-display-sc-regular-italic {
+  font-family: "Playfair Display SC", serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.playfair-display-sc-bold-italic {
+  font-family: "Playfair Display SC", serif;
+  font-weight: 700;
+  font-style: italic;
+}
+
+.playfair-display-sc-black-italic {
+  font-family: "Playfair Display SC", serif;
+  font-weight: 900;
+  font-style: italic;
+}
+
+/* Light Variant - Good for minimal headings or subtext */
+.raleway-light {
+  font-family: "Raleway", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+}
+
+/* Regular Body Text */
+.raleway-regular {
+  font-family: "Raleway", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Medium - Good for buttons or subtle emphasis */
+.raleway-medium {
+  font-family: "Raleway", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+
+/* SemiBold - Great for section titles */
+.raleway-semibold {
+  font-family: "Raleway", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+}
+
+/* Bold - Strong Headlines / Hero Text */
+.raleway-bold {
+  font-family: "Raleway", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* ExtraBold - For Impact Logos / Callouts */
+.raleway-extrabold {
+  font-family: "Raleway", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-style: normal;
+}
+
+/* Black - Maximum Impact */
+.raleway-black {
+  font-family: "Raleway", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 900;
+  font-style: normal;
+}
+
+/* Italic Variant Example */
+.raleway-italic {
+  font-family: "Raleway", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: italic;
+}
+
+
+/* Light Variant - Clean, subtle text */
+.inter-light {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+}
+
+/* Regular - Default body text */
+.inter-regular {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Medium - Subheadings, buttons */
+.inter-medium {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+
+/* SemiBold - Section titles */
+.inter-semibold {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+}
+
+/* Bold - Headlines */
+.inter-bold {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* ExtraBold - Impact text */
+.inter-extrabold {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-style: normal;
+}
+
+/* Black - Strongest emphasis */
+.inter-black {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 900;
+  font-style: normal;
+}
+
+/* Italic Example */
+.inter-italic {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: italic;
+}
+
+
+/* Bold */
+.bodoni-moda-sc-bold {
+  font-family: "Bodoni Moda SC", serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* ExtraBold */
+.bodoni-moda-sc-extrabold {
+  font-family: "Bodoni Moda SC", serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-style: normal;
+}
+
+/* Black (Heaviest) */
+.bodoni-moda-sc-black {
+  font-family: "Bodoni Moda SC", serif;
+  font-optical-sizing: auto;
+  font-weight: 900;
+  font-style: normal;
+}
