@@ -86,6 +86,7 @@ module.exports = {
   getAllProducts,
   getProductByCategory,
   getProductById,
+  getProductbyPage,
   updateProductbyId,
   deleteProduct,
 };

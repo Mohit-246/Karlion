@@ -1,4 +1,4 @@
-const User = require('../model/dbSchema')
+const { User } = require("../model/dbSchema");
 const generateToken = require("../utils/jwt");
 
 //Create New user
@@ -83,12 +83,11 @@ const deleteUser = async (req, res) => {
   }
 };
 
-
-module.exports ={
-    createUser,
-    getUserData,
-    updateUserProfile,
-    authUser,
-     deleteUser,
-    getUsers
-}
+module.exports = {
+  createUser,
+  getUserData,
+  updateUserProfile,
+  authUser,
+  deleteUser,
+  getUsers,
+};

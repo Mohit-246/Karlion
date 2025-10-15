@@ -1,5 +1,10 @@
-const Order = require("../model/dbSchema");
+const { Order } = require("../model/dbSchema");
 
+/*================================
+   🧾 ORDER CONTROLLER — Handles all order-related operations
+  ===============================*/
+
+/*   📦 CREATE NEW ORDER*/
 const createOrder = async (req, res) => {
   try {
     const {
@@ -11,7 +16,6 @@ const createOrder = async (req, res) => {
       totalprice,
     } = req.body;
 
-    // Validate order items
     if (!orderItems || orderItems.length === 0) {
       return res.status(400).json({
         success: false,
@@ -20,7 +24,7 @@ const createOrder = async (req, res) => {
     }
 
     const order = new Order({
-      user: req.user._id, // Assuming user ID comes from auth middleware
+      user: req.user._id,
       orderItems,
       shippingAddress,
       paymentmethods,
@@ -36,67 +40,119 @@ const createOrder = async (req, res) => {
       message: "Order created successfully",
       data: createdOrder,
     });
-  } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: "Error creating order",
-      error: err.message,
-    });
-  }
-};
-
-// Get all orders
-const getAllOrders = async (req, res) => {
-  try {
-    const orders = await Order.find({})
-      .populate("user", "name email")
-      .populate("orderItems.Product", "name image")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      count: orders.length,
-      data: orders,
-    });
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error fetching orders",
-      error: err.message,
+      message: "Error creating order",
+      error: error.message,
     });
   }
 };
 
-// Get order by ID
-// @route   GET /api/orders/:id
-// @access  Private
-const getOrderById = async (req, res) => {
+/*   ✏️ USER: UPDATE THEIR OWN ORDER*/
+const updateMyOrder = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id)
-      .populate("user", "name email phone address")
-      .populate("orderItems.Product", "name imageion");
+    const order = await Order.findById(req.params.id);
 
-    if (!order) {
-      return res.status(404).json({
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
+
+    // Ensure the logged-in user owns this order
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
         success: false,
-        message: "Order not found",
+        message: "Not authorized to edit this order",
       });
     }
 
+    // Prevent editing if paid or delivered
+    if (order.isPaid)
+      return res
+        .status(400)
+        .json({ success: false, message: "Cannot edit a paid order" });
+    if (order.isDelivered)
+      return res
+        .status(400)
+        .json({ success: false, message: "Cannot edit a delivered order" });
+
+    // Allowed editable fields
+    const editableFields = [
+      "shippingAddress",
+      "orderItems",
+      "paymentmethods",
+      "itemprice",
+      "shippingprice",
+      "totalprice",
+    ];
+
+    editableFields.forEach((field) => {
+      if (req.body[field] !== undefined) order[field] = req.body[field];
+    });
+
+    const updatedOrder = await order.save();
+
     res.status(200).json({
       success: true,
-      data: order,
+      message: "Order updated successfully",
+      data: updatedOrder,
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error fetching order",
-      error: err.message,
+      message: "Error updating order",
+      error: error.message,
     });
   }
 };
 
-// Get logged in user orders
+/*   🚫 USER: CANCEL THEIR OWN ORDER*/
+const cancelMyOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
+
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to cancel this order",
+      });
+    }
+
+    if (order.isPaid)
+      return res
+        .status(400)
+        .json({ success: false, message: "Cannot cancel a paid order" });
+    if (order.isDelivered)
+      return res
+        .status(400)
+        .json({ success: false, message: "Cannot cancel a delivered order" });
+
+    order.status = "Cancelled";
+    order.cancelledAt = Date.now();
+
+    const cancelledOrder = await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+      data: cancelledOrder,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error cancelling order",
+      error: error.message,
+    });
+  }
+};
+
+/*   👤 USER: GET THEIR OWN ORDERS*/
 const getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ user: req.user._id })
@@ -108,16 +164,16 @@ const getMyOrders = async (req, res) => {
       count: orders.length,
       data: orders,
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: "Error fetching your orders",
-      error: err.message,
+      error: error.message,
     });
   }
 };
 
-// Get orders by user ID
+/*   👤 ADMIN: GET ORDERS BY USER ID*/
 const getOrdersByUserId = async (req, res) => {
   try {
     const orders = await Order.find({ user: req.params.userId })
@@ -130,26 +186,46 @@ const getOrdersByUserId = async (req, res) => {
       count: orders.length,
       data: orders,
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: "Error fetching user orders",
-      error: err.message,
+      error: error.message,
     });
   }
 };
 
-// Update order to paid
+/*   📦 GET ORDER BY ID*/
+const getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate("user", "name email phone address")
+      .populate("orderItems.Product", "name image");
+
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
+
+    res.status(200).json({ success: true, data: order });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching order details",
+      error: error.message,
+    });
+  }
+};
+
+/*   💰 UPDATE ORDER TO PAID*/
 const updateOrderToPaid = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
 
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
 
     order.isPaid = true;
     order.paidAt = Date.now();
@@ -167,26 +243,24 @@ const updateOrderToPaid = async (req, res) => {
       message: "Order marked as paid",
       data: updatedOrder,
     });
-  } catch (err) {
-    res.status(400).json({
+  } catch (error) {
+    res.status(500).json({
       success: false,
       message: "Error updating order to paid",
-      error: err.message,
+      error: error.message,
     });
   }
 };
 
-// Update order to delivered
+/*   📦 UPDATE ORDER TO DELIVERED*/
 const updateOrderToDelivered = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
 
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
 
     order.isDelivered = true;
     order.deliveredAt = Date.now();
@@ -198,34 +272,37 @@ const updateOrderToDelivered = async (req, res) => {
       message: "Order marked as delivered",
       data: updatedOrder,
     });
-  } catch (err) {
-    res.status(400).json({
+  } catch (error) {
+    res.status(500).json({
       success: false,
       message: "Error updating order to delivered",
-      error: err.message,
+      error: error.message,
     });
   }
 };
 
-// Update order
+/*   🛠️ ADMIN: UPDATE ORDER (Full Control)*/
 const updateOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
 
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
 
-    // Update fields if provided
-    if (req.body.shippingAddress)
-      order.shippingAddress = req.body.shippingAddress;
-    if (req.body.paymentmethods) order.paymentmethods = req.body.paymentmethods;
-    if (req.body.itemprice) order.itemprice = req.body.itemprice;
-    if (req.body.shippingprice) order.shippingprice = req.body.shippingprice;
-    if (req.body.totalprice) order.totalprice = req.body.totalprice;
+    const updatableFields = [
+      "shippingAddress",
+      "paymentmethods",
+      "itemprice",
+      "shippingprice",
+      "totalprice",
+      "status",
+    ];
+
+    updatableFields.forEach((field) => {
+      if (req.body[field] !== undefined) order[field] = req.body[field];
+    });
 
     const updatedOrder = await order.save();
 
@@ -234,26 +311,24 @@ const updateOrder = async (req, res) => {
       message: "Order updated successfully",
       data: updatedOrder,
     });
-  } catch (err) {
-    res.status(400).json({
+  } catch (error) {
+    res.status(500).json({
       success: false,
       message: "Error updating order",
-      error: err.message,
+      error: error.message,
     });
   }
 };
 
-// Delete order
+/*   ❌ DELETE ORDER*/
 const deleteOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
 
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
 
     await order.deleteOne();
 
@@ -261,63 +336,19 @@ const deleteOrder = async (req, res) => {
       success: true,
       message: "Order deleted successfully",
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: "Error deleting order",
-      error: err.message,
+      error: error.message,
     });
   }
 };
 
-// Get paid orders
-const getPaidOrders = async (req, res) => {
+/*   📊 ADMIN: GET ALL ORDERS*/
+const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ isPaid: true })
-      .populate("user", "name email")
-      .populate("orderItems.Product", "name image")
-      .sort({ paidAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      count: orders.length,
-      data: orders,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: "Error fetching paid orders",
-      error: err.message,
-    });
-  }
-};
-
-// Get delivered orders
-const getDeliveredOrders = async (req, res) => {
-  try {
-    const orders = await Order.find({ isDelivered: true })
-      .populate("user", "name email")
-      .populate("orderItems.Product", "name image")
-      .sort({ deliveredAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      count: orders.length,
-      data: orders,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: "Error fetching delivered orders",
-      error: err.message,
-    });
-  }
-};
-
-// Get pending orders (not paid)
-const getPendingOrders = async (req, res) => {
-  try {
-    const orders = await Order.find({ isPaid: false })
+    const orders = await Order.find({})
       .populate("user", "name email")
       .populate("orderItems.Product", "name image")
       .sort({ createdAt: -1 });
@@ -327,16 +358,16 @@ const getPendingOrders = async (req, res) => {
       count: orders.length,
       data: orders,
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error fetching pending orders",
-      error: err.message,
+      message: "Error fetching orders",
+      error: error.message,
     });
   }
 };
 
-// Get order statistics
+/*   📈 ADMIN: GET ORDER STATISTICS*/
 const getOrderStats = async (req, res) => {
   try {
     const totalOrders = await Order.countDocuments();
@@ -344,7 +375,6 @@ const getOrderStats = async (req, res) => {
     const deliveredOrders = await Order.countDocuments({ isDelivered: true });
     const pendingOrders = await Order.countDocuments({ isPaid: false });
 
-    // Calculate total revenue from paid orders
     const revenueData = await Order.aggregate([
       { $match: { isPaid: true } },
       {
@@ -368,16 +398,16 @@ const getOrderStats = async (req, res) => {
         totalRevenue: totalRevenue.toFixed(2),
       },
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: "Error fetching order statistics",
-      error: err.message,
+      error: error.message,
     });
   }
 };
 
-// Get recent orders
+/*   🕒 ADMIN: GET RECENT ORDERS*/
 const getRecentOrders = async (req, res) => {
   try {
     const limit = parseInt(req.params.limit) || 10;
@@ -393,28 +423,94 @@ const getRecentOrders = async (req, res) => {
       count: orders.length,
       data: orders,
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: "Error fetching recent orders",
-      error: err.message,
+      error: error.message,
+    });
+  }
+};
+
+/*   💸 ADMIN: GET PAID / DELIVERED / PENDING ORDERS*/
+const getPaidOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ isPaid: true })
+      .populate("user", "name email")
+      .populate("orderItems.Product", "name image")
+      .sort({ paidAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      data: orders,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching paid orders",
+      error: error.message,
+    });
+  }
+};
+
+const getDeliveredOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ isDelivered: true })
+      .populate("user", "name email")
+      .populate("orderItems.Product", "name image")
+      .sort({ deliveredAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      data: orders,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching delivered orders",
+      error: error.message,
+    });
+  }
+};
+
+const getPendingOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ isPaid: false })
+      .populate("user", "name email")
+      .populate("orderItems.Product", "name image")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      data: orders,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching pending orders",
+      error: error.message,
     });
   }
 };
 
 module.exports = {
   createOrder,
-  getOrderById,
-  getOrderStats,
-  getOrdersByUserId,
-  paidOrders,
-  getPendingOrders,
-  getRecentOrders,
+  updateMyOrder,
+  cancelMyOrder,
   getMyOrders,
-  totalOrders,
+  getOrdersByUserId,
+  getOrderById,
+  updateOrderToPaid,
+  updateOrderToDelivered,
+  updateOrder,
   deleteOrder,
   getAllOrders,
-  updateOrder,
-  updateOrderToDelivered,
-  updateOrderToPaid,
+  getOrderStats,
+  getRecentOrders,
+  getPaidOrders,
+  getDeliveredOrders,
+  getPendingOrders,
 };

@@ -1,11 +1,11 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  name: { type: String, require: true },
-  email: { type: String, require: true },
-  phone: { type: String, require: true },
-  address: { type: String, require: true },
-  password: { type: String, require: true },
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  phone: { type: String, required: true },
+  address: { type: String, required: true },
+  password: { type: String, required: true },
   isSeller: { type: Boolean, default: false },
   isAdmin: { type: Boolean, default: false },
 });
@@ -25,89 +25,121 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 const User = mongoose.model("users", userSchema);
 
 const productSchema = new mongoose.Schema({
-  name: { type: String, require: true },
-  description: { type: String, require: true },
-  acturalprice: { type: Number, require: true },
-  discountedprice: { type: Number, require: true },
-  image: [{ type: String, require: true }],
-  quantity: { type: Number, require: true },
-  Category: { type: String, require: true },
-  Page: { type: String, require: true },
-  sizes: [{ type: String, require: true }],
+  name: { type: String, required: true },
+  description: { type: String, required: true },
+  acturalprice: { type: Number, required: true },
+  discountedprice: { type: Number, required: true },
+  image: [{ type: String, required: true }],
+  quantity: { type: Number, required: true },
+  Category: { type: String, required: true },
+  Page: { type: String, required: true },
+  sizes: [{ type: String, required: true }],
 });
 const Product = mongoose.model("products", productSchema);
 
 const orderitemSchema = new mongoose.Schema({
-  name: { type: String, require: true },
-  qty: { type: String, require: true },
-  img: { type: String, require: true },
-  price: { type: String, require: true },
+  name: { type: String, required: true },
+  qty: { type: String, required: true },
+  img: { type: String, required: true },
+  price: { type: String, required: true },
   Product: {
     type: mongoose.Schema.Types.ObjectId,
-    require: true,
+    required: true,
     ref: "Product",
   },
 });
 const shippingAddressSchema = new mongoose.Schema({
-  name: { type: String, require: true },
-  city: { type: String, require: true },
-  postalcode: { type: String, require: true },
-  state: { type: String, require: true },
+  name: { type: String, required: true },
+  city: { type: String, required: true },
+  postalcode: { type: String, required: true },
+  state: { type: String, required: true },
 });
 
 const orderSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      require: true,
       ref: "User",
+      required: true,
     },
-    orderItems: [orderitemSchema],
-    shippingAddress: shippingAddressSchema,
+
+    orderItems: [
+      {
+        Product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+        name: { type: String, required: true },
+        qty: { type: Number, required: true },
+        price: { type: Number, required: true },
+        image: { type: String },
+      },
+    ],
+
+    shippingAddress: {
+      address: { type: String, required: true },
+      city: { type: String, required: true },
+      postalCode: { type: String, required: true },
+      country: { type: String, required: true },
+    },
+
     paymentmethods: {
       type: String,
-      require: true,
+      required: true,
+      enum: ["COD", "Razorpay", "Stripe", "PayPal"],
+      default: "COD",
     },
+
     paymentresults: {
       id: { type: String },
       status: { type: String },
       update_time: { type: String },
       email_address: { type: String },
     },
+
     itemprice: {
-      type: String,
-      require: true,
+      type: Number,
+      required: true,
       default: 0.0,
     },
+
     shippingprice: {
-      type: String,
-      require: true,
+      type: Number,
+      required: true,
       default: 0.0,
     },
+
     totalprice: {
-      type: String,
-      require: true,
+      type: Number,
+      required: true,
       default: 0.0,
     },
+
     isPaid: {
       type: Boolean,
       required: true,
       default: false,
     },
-    paidAt: {
-      type: Date,
-    },
+    paidAt: { type: Date },
+
     isDelivered: {
       type: Boolean,
       required: true,
       default: false,
     },
-    deliveredAt: {
-      type: Date,
+    deliveredAt: { type: Date },
+
+    status: {
+      type: String,
+      enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
+      default: "Pending",
     },
+
+    cancelledAt: { type: Date },
   },
   {
-    timestamps: true,
+    timestamps: true, // Automatically adds createdAt and updatedAt
   }
 );
 const Order = mongoose.model("Orders", orderSchema);
@@ -117,7 +149,7 @@ const cartItemSchema = mongoose.Schema(
     product: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "Product", 
+      ref: "Product",
     },
     qty: {
       type: Number,
@@ -133,9 +165,9 @@ const cartSchema = mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "User", 
+      ref: "User",
     },
-    cartItems: [cartItemSchema], 
+    cartItems: [cartItemSchema],
   },
   { timestamps: true }
 );
